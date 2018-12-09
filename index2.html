@@ -1,0 +1,117 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="style2.scss">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+</head>
+
+<body onLoad="loadPlanets(planets)">
+  <div class="search-bar">
+    <input type="text" id="search-box" class="search-box">
+    <button type="button" id="search">Search</button>
+  </div>
+  <div class="container">
+    <div class="cards"></div>
+  </div>
+
+  <script>
+    var planets = [
+      {
+        name: "Mercury",
+        population: 1145445
+      },
+      {
+        name: "Venus",
+        population: 11457
+      },
+      {
+        name: "Earth",
+        population: 994576897352
+      },
+      {
+        name: "Mars",
+        population: 114576247676
+      },
+      {
+        name: "Jupiter",
+        population: 33457689676
+      },
+      {
+        name: "Saturn",
+        population: 44457689
+      },
+      {
+        name: "Uranus",
+        population: 8457689
+      },
+      {
+        name: "Neptune",
+        population: 1145768900
+      },
+      {
+        name: "Pluto",
+        population: 100
+      }
+    ];
+    const cardMarkup = planet => `<div class ="card">
+                        <div class="card-details">
+                          <div class="name" style="font-size:${setFontSize(planet)}"">
+                            ${planet.name}
+                          </div>
+                          <div class="population"> 
+                            ${planet.population}
+                          </div>
+                          <div class="relative"> 
+                            ${planet.scale}
+                          </div>
+                        </div>
+                      <div>`;
+
+    const scaleBetween = (unscaledNum, scaleMin, scaleMax, minPopulation, maxPopulation) => (scaleMax - scaleMin) * (unscaledNum - minPopulation) / (maxPopulation - minPopulation) + scaleMin
+
+    function setFontSize(planetObj) {
+      if (planetObj.scale == 1) {
+        return '1rem';
+      }
+      else {
+        return ((planetObj.index/10) + planetObj.scale) < 0.2 ? '0.15rem' : ((planetObj.index/10) + planetObj.scale) +'rem';
+      }
+    }
+
+    function loadPlanets(planetsArr) {
+      planetsArr = _.map(planetsArr, (planet, index) => {
+        const pop = _.parseInt(planet.population) || 0;
+        return {
+          name: planet.name,
+          population: pop,
+          rank: index
+        };
+      });
+      planetsArr = _.sortBy(planetsArr, 'population');
+
+      const minPopulation = _.first(planetsArr).population;
+      const maxPopulation = _.last(planetsArr).population;
+
+      const min = planetsArr.findIndex(val => val['population'] > 0)
+      $('.cards').html('');
+      planetsArr.forEach((planet,index) => {
+        /*planet.relativeMax = planet.population > 0 ? (planet.population / _.last(planetsArr).population).toFixed(3) : 0;
+        planet.relativeMin = planet.population > 0 ? (planetsArr[min].population / planet.population).toFixed(3) : 0;*/
+        planet.index= index;
+        planet.scale = scaleBetween(planet.population, 0, 1, minPopulation, maxPopulation);
+        $('.cards').append(cardMarkup(planet));
+      });
+    }
+    $('#search').click(() => {
+      $.ajax({
+        url: "https://swapi.co/api/planets/?search=" + $('#search-box').val(),
+        success: function(result) {
+          loadPlanets(result.results);
+        }
+      });
+    })
+  </script>
+</body>
+
+</html>
